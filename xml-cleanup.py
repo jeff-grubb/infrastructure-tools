@@ -109,4 +109,4 @@ for bucket_name in config['buckets']:
     objects_to_delete = [o.key for o in objects if o.key.endswith('.xml')]
 
     for obj in objects_to_delete:
-        print (obj)
+        print ("s3://" + bucket_name + "/" + obj)
