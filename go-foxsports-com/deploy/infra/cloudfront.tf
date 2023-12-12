@@ -18,7 +18,7 @@ resource "aws_cloudfront_distribution" "cf_dist" {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD", "OPTIONS"]
     target_origin_id       = aws_s3_bucket_website_configuration.website_bucket_website_configuration.id
-    viewer_protocol_policy = "https-only"
+    viewer_protocol_policy = "redirect-to-https"
     default_ttl            = 0
 
     forwarded_values {
