@@ -2,6 +2,7 @@
 
 import argparse
 import boto3
+import os
 
 arg_parser = argparse.ArgumentParser(description='Kill XML files in v3-sitemap folder')
 arg_parser.add_argument('--bu', help='fox business unit', required=True)
@@ -106,7 +107,17 @@ for bucket_name in config['buckets']:
     bucket = s3.Bucket(bucket_name)
 
     objects = bucket.objects.filter(Prefix=config['prefix'])
-    objects_to_delete = [o.key for o in objects if o.key.endswith('.xml')]
+    objects_to_delete = [o for o in objects if o.key.endswith('.xml')]
+
+    basepath = "./data/" + bucket_name + "/" + config['prefix']
+    if not os.path.exists(basepath):
+        os.makedirs(basepath)
 
     for obj in objects_to_delete:
-        print ("s3://" + bucket_name + "/" + obj)
+        # Make a copy of the object before deleting
+        filename = "s3://" + bucket_name + "/" + obj.key
+        print ("Downloading " + filename)
+        bucket.download_file(obj.key, "./data/" + bucket_name + "/" + obj.key)
+
+        print ("Deleting " + filename)
+        bucket.delete_key(obj.key)
