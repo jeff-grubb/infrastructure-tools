@@ -120,4 +120,4 @@ for bucket_name in config['buckets']:
         bucket.download_file(obj.key, "./data/" + bucket_name + "/" + obj.key)
 
         print ("Deleting " + filename)
-        bucket.delete_key(obj.key)
+        obj.delete()
