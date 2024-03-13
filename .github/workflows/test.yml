@@ -14,15 +14,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Printing
         run: |
-          echo "All:"
-          echo "${{ steps.abc.outputs.all }}"
-          echo "Added:"
-          echo "${{ steps.abc.outputs.added }}"
-          echo "Removed:"
-          echo "${{ steps.abc.outputs.removed }}"
-          echo "Renamed:"
-          echo "${{ steps.abc.outputs.renamed }}"
-          echo "Modified:"
-          echo "${{ steps.abc.outputs.modified }}"
+
           echo "Added+Modified:"
           echo "${{ steps.abc.outputs.added_modified }}"
+      
+          for changed_file in ${{ steps.files.outputs.all }}; do
+            if [[ changed_file == *.json ]] ; then 
+              echo "Do something with this JSON file ${changed_file}."
+            fi
+          done
