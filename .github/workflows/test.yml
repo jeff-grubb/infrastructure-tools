@@ -15,5 +15,5 @@ jobs:
       - name: Printing
         run: |
           for changed_file in ${{ steps.files.outputs.added_modified }}; do 
-            echo "Checking %{changed_file}." 
+            echo "Checking ${changed_file}." 
           done
