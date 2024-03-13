@@ -2,3 +2,6 @@
 data
 .terraform
 *.hcl
+.DS_Store
+__pycache__/
+
