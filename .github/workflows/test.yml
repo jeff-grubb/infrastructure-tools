@@ -14,4 +14,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Printing
         run: |
-          for changed_file in ${{ steps.files.outputs.added_modified }}; do echo "Checking %{changed_file}." ; if [[ changed_file == *.json ]] ; then echo "Do something with this JSON file ${changed_file}." ; fi ; done
+          for changed_file in ${{ steps.files.outputs.added_modified }}; do 
+            echo "Checking %{changed_file}." 
+          done
