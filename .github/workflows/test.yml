@@ -18,7 +18,7 @@ jobs:
           echo "Added+Modified:"
           echo "${{ steps.abc.outputs.added_modified }}"
       
-          for changed_file in ${{ steps.files.outputs.all }}; do
+          for changed_file in ${{ steps.files.outputs.added_modified }}; do
             if [[ changed_file == *.json ]] ; then 
               echo "Do something with this JSON file ${changed_file}."
             fi
