@@ -1,0 +1,444 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Sitemap V3 Lambda",
+
+  "Parameters": {
+    "VPCGroup": {
+      "Description": "VPC Group SSM Parameter reference",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+      "Default": "/infrastructure/vpc_group"
+    },
+
+    "PrimaryControlBucket": {
+      "Description": "Primary region control bucket SSM Parameter reference",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+      "Default": "/infrastructure/control_bucket"
+    },
+
+    "CloudformationTemplateSource": {
+      "Description": "The Cloudformation template source in the S3 bucket",
+      "Type": "String"
+    },
+
+    "Environment": {
+      "Description": "Environment for deployment",
+      "Type": "String",
+      "Default": "dev",
+      "AllowedValues": [
+        "prod",
+        "stage",
+        "dev"
+      ],
+      "ConstraintDescription": "Must be one of Dev, Stage or Prod."
+    },
+
+    "Version": {
+      "Description": "Function version - NB: The lambda zips must be available in the control bucket",
+      "Type": "String",
+      "Default": "0.0.1-beta-1"
+    },
+
+    "NodeVersion": {
+      "Description": "Node version for the Lambda Framework",
+      "Type": "String",
+      "Default": "nodejs18.x",
+      "AllowedValues": [
+        "nodejs18.x",
+        "nodejs16.x"
+      ]
+    },
+
+    "APIName": {
+      "Description": "APIName",
+      "Type": "String",
+      "Default": "fn",
+      "AllowedValues": [
+        "fn"
+      ]
+    },
+
+    "LoggingLevel": {
+      "AllowedValues": [
+        "error",
+        "warn",
+        "info",
+        "verbose",
+        "debug",
+        "silly"
+      ],
+      "Default": "debug",
+      "Description": "Verbosity for Lambda functions logging",
+      "Type": "String"
+    }
+  },
+
+  "Mappings" : {
+    "Environment": {
+      "Fn::Transform" : {
+        "Name" : "AWS::Include",
+        "Parameters" : {
+          "Location" : { "Fn::Join": [ "/", [
+            "s3:/", { "Ref" : "PrimaryControlBucket" },
+            "formation/include",
+            "Environment.json"
+          ] ] }
+        }
+      }
+    },
+
+    "AWSAccounts" : {
+      "Fn::Transform" : {
+        "Name" : "AWS::Include",
+        "Parameters" : {
+          "Location" : { "Fn::Join": [ "/", [
+            "s3:/", { "Ref" : "PrimaryControlBucket" },
+            "formation/include",
+            "AWSAccounts.json"
+          ] ] }
+        }
+      }
+    },
+
+    "Sites" : {
+      "Fn::Transform" : {
+        "Name" : "AWS::Include",
+        "Parameters" : {
+          "Location" : { "Fn::Join": [ "/", [
+            "s3:/", { "Ref" : "PrimaryControlBucket" },
+            "formation/include",
+            "Sites.json"
+          ] ] }
+        }
+      }
+    },
+
+    "DDSecrets" : {
+      "Fn::Transform" : {
+        "Name" : "AWS::Include",
+        "Parameters" : {
+          "Location" : {
+            "Fn::Sub" : [ "s3://${control_bucket}/secret/datadog/secrets.json", { "control_bucket": { "Ref" : "PrimaryControlBucket"}}]
+          }
+        }
+      }
+    }
+  },
+
+  "Resources": {
+
+    "SitemapGeneratorV3Role" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [
+            {
+              "Action" : [ "sts:AssumeRole" ],
+              "Effect" : "Allow",
+              "Principal" : {
+                "Service" : [ "lambda.amazonaws.com"]
+              }
+            }
+          ]
+        },
+        "Path" : { "Fn::Join" : [ "", [ "/",  { "Ref" : "Environment" },  "/", { "Ref" : "APIName" },  "/" ] ] }
+      }
+    },
+
+    "CommonLambdaRolePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "DependsOn" : "SitemapGeneratorV3Role",
+      "Properties": {
+        "Roles": [
+          { "Ref": "SitemapGeneratorV3Role" }
+        ],
+        "PolicyName" : { "Fn::Join" : [ "-", [ { "Ref" : "Environment" }, { "Ref" : "APIName" }, "common", "policy" ] ] },
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [
+            {
+              "Sid" : "AllowLogStreamCreation",
+              "Effect" : "Allow",
+              "Action" : [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource" :{ "Fn::Sub" : "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*" }
+            },
+            {
+              "Sid" : "AllowAccesstoZip",
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Resource": { "Fn::Join" : ["", [ "arn:aws:s3:::", { "Fn::ImportValue" : { "Fn::Join" : [ "", [ "foundation", { "Fn::FindInMap" : [ "AWSAccounts", { "Ref" : "VPCGroup" }, "Suffix" ] }, "-ControlBucket" ] ] } },"/common/lambda/*" ] ] }
+            }
+          ]
+        }
+      }
+    },
+
+    "SitemapGeneratorV3Policy": {
+      "Type": "AWS::IAM::Policy",
+      "DependsOn" : "SitemapGeneratorV3Role",
+      "Properties": {
+        "Roles": [
+          { "Ref": "SitemapGeneratorV3Role" }
+        ],
+        "PolicyName" : { "Fn::Join" : [ "-", [ { "Ref" : "Environment" }, { "Ref" : "APIName" }, "sitemap", "generator", "v3" ] ] },
+        "PolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [
+            {
+              "Sid" : "ESGet",
+              "Effect": "Allow",
+              "Action": [
+                "es:ESHttpGet",
+                "es:ESHttpPost"
+              ],
+              "Resource": [
+                { "Fn::ImportValue" : { "Fn::Join" : [ "-", [ {"Ref" : "APIName"}, { "Ref" : "Environment"}, "ContentDeliveryElasticSearchDomainArn" ] ]}},
+                { "Fn::Join": [ "", [
+                  { "Fn::ImportValue" : { "Fn::Join" : [ "-", [ {"Ref" : "APIName"}, { "Ref" : "Environment"}, "ContentDeliveryElasticSearchDomainArn" ] ]}},
+                  "/*"
+                ]]}
+              ]
+            }
+          ]
+        }
+      }
+    },
+
+    "SitemapGeneratorV3Bucket": {
+      "Type" : "AWS::S3::Bucket",
+      "DependsOn" : "SitemapGeneratorV3Role",
+      "Properties" : {
+        "BucketName" : { "Fn::Join" : [ "-", [ { "Ref" : "Environment"}, {"Ref" : "APIName"}, "fox", "sitemaps", "v3" ] ] },
+        "Tags" : [
+          { "Key" : "Environment", "Value" : { "Ref" : "Environment" } }
+        ]
+      }
+    },
+
+    "SitemapGeneratorV3BucketPolicy" : {
+      "Type" : "AWS::S3::BucketPolicy",
+      "DependsOn" : "SitemapGeneratorV3Bucket",
+      "Properties" : {
+        "Bucket" : { "Ref" : "SitemapGeneratorV3Bucket"},
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": {
+            "Action": [
+              "s3:GetObject",
+              "s3:PutObject",
+              "s3:ListBucket",
+              "s3:GetBucketLocation",
+              "s3:DeleteObject"
+            ],
+            "Effect":"Allow",
+            "Resource": [
+              { "Fn::GetAtt": ["SitemapGeneratorV3Bucket", "Arn"] },
+              { "Fn::Join" : ["", [{ "Fn::GetAtt": ["SitemapGeneratorV3Bucket", "Arn"] } , "/*" ]]}
+            ],
+            "Principal": {
+              "AWS": [ { "Fn::GetAtt": ["SitemapGeneratorV3Role", "Arn"] }]
+            }
+          }
+        }
+      }
+    },
+
+    "SitemapGeneratorV3Function": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn" : "SitemapGeneratorV3Role",
+      "Properties": {
+        "Code": {
+          "S3Bucket" : { "Fn::ImportValue" : { "Fn::Join" : [ "", [ "foundation", { "Fn::FindInMap" : [ "AWSAccounts", { "Ref" : "VPCGroup" }, "Suffix" ] }, "-ControlBucket" ] ] } },
+          "S3Key" : { "Fn::Join" : [ "", [ "common/lambda/", "fox-sitemap-generator-v3-", { "Ref" : "Version" }, ".zip" ] ] }
+        },
+        "Description" : { "Fn::Join" : [ "", [ "Fox Sitemap Generator V3 for ", { "Ref" : "APIName" } ] ] },
+        "FunctionName": { "Fn::Sub" : [ "${environment}-${APIName}-fox-sitemap-generator-v3" , { "environment": { "Ref" : "Environment"}, "api": { "Fn::FindInMap" : [ "Sites", { "Ref" : "APIName" }, "Abbreviation" ] }}]},
+        "Handler": "/opt/nodejs/node_modules/datadog-lambda-js/handler.handler",
+        "Layers": [
+          { "Fn::Sub" : [ "arn:aws:lambda:${AWS::Region}:464622532012:layer:${runtime}:${version}", { "runtime": { "Fn::FindInMap" : [ "DDSecrets", { "Ref": "NodeVersion" }, "LayerMapping" ] }, "version": { "Fn::FindInMap" : [ "DDSecrets", { "Ref": "NodeVersion" }, "CoreLayer" ] }} ]},
+          { "Fn::Sub" : [ "arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Extension-ARM:${version}", { "version": { "Fn::FindInMap" : [ "DDSecrets", { "Ref": "NodeVersion" }, "ExtensionLayer" ] }} ] }
+        ],
+        "MemorySize": 1024,
+        "Role": {"Fn::GetAtt": [ "SitemapGeneratorV3Role", "Arn" ] },
+        "Runtime": { "Ref": "NodeVersion"},
+        "Architectures": [ "arm64" ],
+        "Timeout": 900,
+        "Environment" : {
+          "Variables" : {
+            "AWS_REGION_NAME" : { "Ref" : "AWS::Region" },
+            "LOGGING_LEVEL": { "Ref": "LoggingLevel" },
+            "SITE_DOMAIN": { "Fn::FindInMap" : [ "Sites", { "Ref" : "APIName" }, "Domain" ] },
+            "DD_API_KEY": { "Fn::FindInMap" : [ "DDSecrets", "DD", "apikey" ] },
+            "DD_TRACE_ENABLED": true,
+            "DD_LAMBDA_HANDLER": "index.generate",
+            "DD_SERVICE": {"Fn::Sub" : [ "${dashy}api.${domain}",{
+              "dashy": { "Fn::FindInMap" : [ "Environment", { "Ref" : "Environment" }, "DashyPrefix" ] },
+              "domain": { "Fn::FindInMap" : [ "Sites", { "Ref": "APIName" }, "Domain" ] }
+            }]},
+            "DD_ENV": { "Fn::Sub" : [ "${environment}",{ "environment": { "Ref" : "Environment"}}]},
+            "DD_TAGS": "api",
+            "NETWORK": { "Ref": "APIName"},
+            "ELASTICSEARCH_PUBLIC_ENDPOINT": {
+              "Fn::Sub" : [ "https://${es_endpoint}", {
+                "es_endpoint": {"Fn::ImportValue" : { "Fn::Join" : [ "-", [ {"Ref" : "APIName"}, { "Ref" : "Environment"}, "ContentDeliveryElasticSearchDomainEndpoint" ] ]}}
+              }]},
+            "ELASTICSEARCH_DOC_TYPE": "post",
+            "ELASTICSEARCH_ARTICLES_INDEX": "spark_cms_articles",
+            "ELASTICSEARCH_ARTICLES_LIVE_BLOGS_INDEX": "spark_cms_articles,fox_live_blogs",
+            "ELASTICSEARCH_ARTICLES_LIVE_BLOGS_SEARCH_INDEX": "spark_cms_articles,fox_live_blogs",
+            "ELASTICSEARCH_SHOWS_INDEX": "spark_cms_shows",
+            "ELASTICSEARCH_VIDEOS_INDEX": "fox_videos",
+            "ELASTICSEARCH_SECTIONS_INDEX": "spark_cms_categories",
+            "ELASTICSEARCH_CATEGORIES_INDEX": "spark_cms_tags",
+            "ELASTICSEARCH_PERSONS_INDEX": "spark_cms_persons",
+            "ELASTICSEARCH_PAGES_INDEX": "spark_cms_pages",
+            "ELASTICSEARCH_SCROLL_LOCK_TIME": "50s",
+            "ELASTICSEARCH_EXTERNAL_LIVE_BLOGS_INDEX": "fox_live_blogs",
+            "GOOGLE_NEWS_INDEX_SITEMAP_SIZE": 1000,
+            "SITEMAP_PAGE_SIZE": 10000,
+            "VIDEOS_SITEMAP_PAGE_SIZE": 5000,
+            "ELASTICSEARCH_ARTICLES_EXTERNAL_CONTENT_INDEX": "spark_cms_articles",
+            "FB_QUOTES_ENDPOINT": "https://api.foxbusiness.com/vest/symbols",
+            "BASE_SITEMAPS": "news,articles,sections,categories,personalities,shows,videoshows,pages,fastchanging,liveblogs,videos,quotes",
+            "ROOT_SITE_URL": {
+              "Fn::Sub" : [ "https://${dotty}${domain}", {
+                "dotty": { "Fn::FindInMap" : [ "Environment", { "Ref" : "Environment" }, "DottyPrefix" ] },
+                "domain": { "Fn::FindInMap" : [ "Sites", { "Ref": "APIName" }, "Domain" ] } } ]
+            },
+            "SITE_NAME": { "Fn::FindInMap" : [ "Sites", { "Ref": "APIName" }, "Alias" ] },
+            "S3_ENDPOINT": "s3.amazonaws.com",
+            "SITEMAP_BUCKET_NAME": { "Ref": "SitemapGeneratorV3Bucket" },
+            "SITEMAP_FILES_PATH": "sitemaps-v3",
+            "IS_OFFLINE": "false",
+            "IS_PRODUCTION": "false",
+            "ES_SCROLL_MAX_SLICES": "10"
+          }
+        }
+      }
+    },
+
+    "LambdaLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "DependsOn" : "SitemapGeneratorV3Role",
+      "Properties": {
+        "LogGroupName" : { "Fn::Join" : [ "", [ { "Fn::Sub" :
+        ["/aws/lambda/${environment}-${APIName}-fox-sitemap-generator-v3", {
+          "environment": { "Ref": "Environment" },
+          "api": {"Fn::FindInMap": [ "Sites", { "Ref": "APIName" }, "Abbreviation" ] }
+        } ] } ] ]
+        },
+        "RetentionInDays" : 7
+      }
+    },
+
+    "SitemapGeneratorV3ArticlesScheduledRule" : {
+      "Type" : "AWS::Events::Rule",
+      "DependsOn" : "SitemapGeneratorV3Function",
+      "Properties" : {
+        "Description" : "Event rule to run Sitemap Generator handler",
+        "ScheduleExpression" : "cron(0 * * * ? *)",
+        "State" : "ENABLED",
+        "Targets" : [ {
+          "Arn" : { "Fn::GetAtt" : [ "SitemapGeneratorV3Function", "Arn" ] },
+          "Id" : "TargetLambdaFunction",
+          "Input": "{\"sitemaps\": \"articles\"}"
+        } ]
+      }
+    },
+
+    "ArticlesRuleEventPermissionsToInvokeSitemapLambda" : {
+      "Type" : "AWS::Lambda::Permission",
+      "DependsOn" : "SitemapGeneratorV3Function",
+      "Properties" : {
+        "FunctionName" : { "Ref" : "SitemapGeneratorV3Function" },
+        "Action" : "lambda:InvokeFunction",
+        "Principal" : "events.amazonaws.com",
+        "SourceArn" : { "Fn::GetAtt" : [ "SitemapGeneratorV3ArticlesScheduledRule", "Arn" ] }
+      }
+    },
+
+    "SitemapGeneratorV3VideosScheduledRule" : {
+      "Type" : "AWS::Events::Rule",
+      "DependsOn" : "SitemapGeneratorV3Function",
+      "Properties" : {
+        "Description" : "Event rule to run Sitemap Generator handler",
+        "ScheduleExpression" : "cron(15 * * * ? *)",
+        "State" : "ENABLED",
+        "Targets" : [ {
+          "Arn" : { "Fn::GetAtt" : [ "SitemapGeneratorV3Function", "Arn" ] },
+          "Id" : "TargetLambdaFunction",
+          "Input": "{\"sitemaps\": \"videos\"}"
+        } ]
+      }
+    },
+
+    "VideosRuleEventPermissionsToInvokeSitemapLambda" : {
+      "Type" : "AWS::Lambda::Permission",
+      "DependsOn" : "SitemapGeneratorV3Function",
+      "Properties" : {
+        "FunctionName" : { "Ref" : "SitemapGeneratorV3Function" },
+        "Action" : "lambda:InvokeFunction",
+        "Principal" : "events.amazonaws.com",
+        "SourceArn" : { "Fn::GetAtt" : [ "SitemapGeneratorV3VideosScheduledRule", "Arn" ] }
+      }
+    },
+
+    "SitemapGeneratorV3SectionsScheduledRule" : {
+      "Type" : "AWS::Events::Rule",
+      "DependsOn" : "SitemapGeneratorV3Function",
+      "Properties" : {
+        "Description" : "Event rule to run Sitemap Generator handler",
+        "ScheduleExpression" : "cron(30 * * * ? *)",
+        "State" : "ENABLED",
+        "Targets" : [ {
+          "Arn" : { "Fn::GetAtt" : [ "SitemapGeneratorV3Function", "Arn" ] },
+          "Id" : "TargetLambdaFunction",
+          "Input": "{\"sitemaps\": \"sections,categories,personalities,shows,sports,pages,sparkliveblogs,liveblogs,images,videoshows\"}"
+        } ]
+      }
+    },
+
+    "SectionsRuleEventPermissionsToInvokeSitemapLambda" : {
+      "Type" : "AWS::Lambda::Permission",
+      "DependsOn" : "SitemapGeneratorV3Function",
+      "Properties" : {
+        "FunctionName" : { "Ref" : "SitemapGeneratorV3Function" },
+        "Action" : "lambda:InvokeFunction",
+        "Principal" : "events.amazonaws.com",
+        "SourceArn" : { "Fn::GetAtt" : [ "SitemapGeneratorV3SectionsScheduledRule", "Arn" ] }
+      }
+    },
+
+    "SitemapGeneratorV3NewsScheduledRule" : {
+      "Type" : "AWS::Events::Rule",
+      "DependsOn" : "SitemapGeneratorV3Function",
+      "Properties" : {
+        "Description" : "Event rule to run Sitemap Generator handler",
+        "ScheduleExpression" : "cron(45 * * * ? *)",
+        "State" : "ENABLED",
+        "Targets" : [ {
+          "Arn" : { "Fn::GetAtt" : [ "SitemapGeneratorV3Function", "Arn" ] },
+          "Id" : "TargetLambdaFunction",
+          "Input": "{\"sitemaps\": \"news,fastchanging,index\"}"
+        } ]
+      }
+    },
+
+    "NewsRuleEventPermissionsToInvokeSitemapLambda" : {
+      "Type" : "AWS::Lambda::Permission",
+      "DependsOn" : "SitemapGeneratorV3Function",
+      "Properties" : {
+        "FunctionName" : { "Ref" : "SitemapGeneratorV3Function" },
+        "Action" : "lambda:InvokeFunction",
+        "Principal" : "events.amazonaws.com",
+        "SourceArn" : { "Fn::GetAtt" : [ "SitemapGeneratorV3NewsScheduledRule", "Arn" ] }
+      }
+    }
+  }
+}
