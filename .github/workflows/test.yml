@@ -19,5 +19,6 @@ jobs:
             echo "Checking ${changed_file}." 
             if [[ ${changed_file} == *.json ]] ; then 
               echo "Linting json file ${changed_file}"
+              jsonlint -q ${changed_file}
             fi
           done
