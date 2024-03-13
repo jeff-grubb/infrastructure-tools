@@ -19,6 +19,5 @@ jobs:
             if [[ ${changed_file} == *.json ]] ; then 
               echo "Linting json file ${changed_file}"
               cat ${changed_file} | jq . > /dev/null
-              #./rain fmt --verify ${changed_file}
             fi
           done
