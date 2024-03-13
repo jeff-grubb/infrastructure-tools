@@ -13,18 +13,9 @@ jobs:
           format: space-delimited
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Cloud Formation Formatter
-        run: |
-          gh release download --repo aws-cloudformation/rain --pattern "*_linux-amd64.zip" --output "rain.zip"
-          unzip -j "rain.zip" "*/rain"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-      - name: Check AWS format
+      - name: Check Json format
         run: |
           for changed_file in ${{ steps.files.outputs.added_modified }}; do 
-            echo "Checking ${changed_file}." 
             if [[ ${changed_file} == *.json ]] ; then 
               echo "Linting json file ${changed_file}"
               cat ${changed_file} | jq . > /dev/null
