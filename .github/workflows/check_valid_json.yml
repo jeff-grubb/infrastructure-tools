@@ -17,6 +17,8 @@ jobs:
         run: |
           gh release download --repo aws-cloudformation/rain --pattern "*_linux-amd64.zip" --output "rain.zip"
           unzip -j "rain.zip" "*/rain"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Json format
         run: |
