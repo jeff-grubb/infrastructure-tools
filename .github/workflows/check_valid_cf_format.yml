@@ -3,7 +3,7 @@ name: CloudFormation Format Test
 on: push
 
 jobs:
-  cloudformation-fmt:
+  cfn-format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
