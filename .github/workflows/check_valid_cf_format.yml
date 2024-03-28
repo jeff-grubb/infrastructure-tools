@@ -1,4 +1,4 @@
-name: Test
+name: CloudFormation Format Test
 
 on: push
 
