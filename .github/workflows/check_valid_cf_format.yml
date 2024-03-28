@@ -3,10 +3,10 @@ name: Test
 on: push
 
 jobs:
-  test:
+  cloudformation-fmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.1.0
+      - uses: actions/checkout@v3
       - uses: jitterbit/get-changed-files@v1
         id: files
         with:
@@ -20,7 +20,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check Json format
+      - name: Check Formatting
         run: |
           for changed_file in ${{ steps.files.outputs.all }}; do 
             if [[ ${changed_file} == *.json ]] ; then 
