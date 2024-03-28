@@ -35,7 +35,7 @@
     "Version": {
       "Description": "Function version - NB: The lambda zips must be available in the control bucket",
       "Type": "String",
-      "Default": "0.0.1-beta-1"
+      "Default": "0.0.1-beta-2"
     },
 
     "NodeVersion": {
@@ -53,7 +53,8 @@
       "Type": "String",
       "Default": "fn",
       "AllowedValues": [
-        "fn"
+        "fn",
+        "fb"
       ]
     },
 
@@ -107,6 +108,19 @@
             "s3:/", { "Ref" : "PrimaryControlBucket" },
             "formation/include",
             "Sites.json"
+          ] ] }
+        }
+      }
+    },
+
+    "StaticS3Bucket": {
+      "Fn::Transform" : {
+        "Name" : "AWS::Include",
+        "Parameters" : {
+          "Location" : { "Fn::Join": [ "/", [
+            "s3:/", { "Ref" : "PrimaryControlBucket" },
+            "formation/include",
+            "StaticS3Bucket-fn.json"
           ] ] }
         }
       }
@@ -204,47 +218,44 @@
                   "/*"
                 ]]}
               ]
+            },
+            {
+              "Action": [
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+              ],
+              "Effect":"Allow",
+              "Resource": [
+                {
+                  "Fn::Join" : ["", [
+                    "arn:aws:s3:::",
+                    { "Fn::Sub" : [ "${dashy}static-${alias}-com", {
+                      "dashy": { "Fn::FindInMap" : [ "Environment", { "Ref" : "Environment" }, "DashyPrefix" ] },
+                      "alias": { "Fn::FindInMap" : [ "Sites", { "Ref" : "APIName" }, "Alias" ] }
+                    } ] }
+                  ] ]
+                }
+              ]
+            },
+            {
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+              ],
+              "Effect":"Allow",
+              "Resource": [
+                { "Fn::Join" : ["", [
+                  "arn:aws:s3:::",
+                  { "Fn::Sub" : [ "${dashy}static-${alias}-com", {
+                    "dashy": { "Fn::FindInMap" : [ "Environment", { "Ref" : "Environment" }, "DashyPrefix" ] },
+                    "alias": { "Fn::FindInMap" : [ "Sites", { "Ref" : "APIName" }, "Alias" ] }
+                  } ] },
+                  "/sitemaps-v3-lambda/*"
+                ] ] }
+              ]
             }
           ]
-        }
-      }
-    },
-
-    "SitemapGeneratorV3Bucket": {
-      "Type" : "AWS::S3::Bucket",
-      "DependsOn" : "SitemapGeneratorV3Role",
-      "Properties" : {
-        "BucketName" : { "Fn::Join" : [ "-", [ { "Ref" : "Environment"}, {"Ref" : "APIName"}, "fox", "sitemaps", "v3" ] ] },
-        "Tags" : [
-          { "Key" : "Environment", "Value" : { "Ref" : "Environment" } }
-        ]
-      }
-    },
-
-    "SitemapGeneratorV3BucketPolicy" : {
-      "Type" : "AWS::S3::BucketPolicy",
-      "DependsOn" : "SitemapGeneratorV3Bucket",
-      "Properties" : {
-        "Bucket" : { "Ref" : "SitemapGeneratorV3Bucket"},
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": {
-            "Action": [
-              "s3:GetObject",
-              "s3:PutObject",
-              "s3:ListBucket",
-              "s3:GetBucketLocation",
-              "s3:DeleteObject"
-            ],
-            "Effect":"Allow",
-            "Resource": [
-              { "Fn::GetAtt": ["SitemapGeneratorV3Bucket", "Arn"] },
-              { "Fn::Join" : ["", [{ "Fn::GetAtt": ["SitemapGeneratorV3Bucket", "Arn"] } , "/*" ]]}
-            ],
-            "Principal": {
-              "AWS": [ { "Fn::GetAtt": ["SitemapGeneratorV3Role", "Arn"] }]
-            }
-          }
         }
       }
     },
@@ -264,7 +275,7 @@
           { "Fn::Sub" : [ "arn:aws:lambda:${AWS::Region}:464622532012:layer:${runtime}:${version}", { "runtime": { "Fn::FindInMap" : [ "DDSecrets", { "Ref": "NodeVersion" }, "LayerMapping" ] }, "version": { "Fn::FindInMap" : [ "DDSecrets", { "Ref": "NodeVersion" }, "CoreLayer" ] }} ]},
           { "Fn::Sub" : [ "arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Extension-ARM:${version}", { "version": { "Fn::FindInMap" : [ "DDSecrets", { "Ref": "NodeVersion" }, "ExtensionLayer" ] }} ] }
         ],
-        "MemorySize": 1024,
+        "MemorySize": 10240,
         "Role": {"Fn::GetAtt": [ "SitemapGeneratorV3Role", "Arn" ] },
         "Runtime": { "Ref": "NodeVersion"},
         "Architectures": [ "arm64" ],
@@ -313,8 +324,11 @@
             },
             "SITE_NAME": { "Fn::FindInMap" : [ "Sites", { "Ref": "APIName" }, "Alias" ] },
             "S3_ENDPOINT": "s3.amazonaws.com",
-            "SITEMAP_BUCKET_NAME": { "Ref": "SitemapGeneratorV3Bucket" },
-            "SITEMAP_FILES_PATH": "sitemaps-v3",
+            "SITEMAP_BUCKET_NAME": { "Fn::Sub" : [ "${dashy}static-${alias}-com", {
+              "dashy": { "Fn::FindInMap" : [ "Environment", { "Ref" : "Environment" }, "DashyPrefix" ] },
+              "alias": { "Fn::FindInMap" : [ "Sites", { "Ref" : "APIName" }, "Alias" ] }
+            }]},
+            "SITEMAP_V3_FILES_PATH": "sitemaps-v3-lambda",
             "IS_OFFLINE": "false",
             "IS_PRODUCTION": "false",
             "ES_SCROLL_MAX_SLICES": "10"

@@ -1,0 +1,29 @@
+name: Test
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - uses: jitterbit/get-changed-files@v1
+        id: files
+        with:
+          format: space-delimited
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Cloud Formation Formatter
+        run: |
+          gh release download --repo aws-cloudformation/rain --pattern "*_linux-amd64.zip" --output "rain.zip"
+          unzip -j "rain.zip" "*/rain"
+
+      - name: Check Json format
+        run: |
+          for changed_file in ${{ steps.files.outputs.all }}; do 
+            if [[ ${changed_file} == *.json ]] ; then 
+              echo "Linting json file ${changed_file}"
+              #cat ${changed_file} | jq . > /dev/null
+              ./rain fmt --verify ${changed_file}
+            fi
+          done
