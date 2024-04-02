@@ -1,0 +1,7 @@
+{ "NewsRuleEventPermissionsToInvokeSitemapLambda": {"Type": "AWS::Lambda::Permission",
+  "DependsOn": "SitemapGeneratorV3Function",
+  "Properties": {"FunctionName": {
+      "Ref": "SitemapGeneratorV3Function"}, "Action": "lambda:InvokeFunction", "Principal": "events.amazonaws.com", "SourceArn": {
+      "Fn::GetAtt": [
+        "SitemapGeneratorV3NewsScheduledRule",
+        "Arn"]}}}}
