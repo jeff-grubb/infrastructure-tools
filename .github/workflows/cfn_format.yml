@@ -1,13 +1,16 @@
 name: Format the code
 
 on:
+  push:
   pull_request:
+    branches: [main]
+    types: [opened, syncronize]
 
 jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jitterbit/get-changed-files@v1
         id: files
         with:
