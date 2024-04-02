@@ -29,12 +29,10 @@ jobs:
               echo "Linting json file ${changed_file}"
               #cat ${changed_file} | jq . > /dev/null
               ./rain fmt -j -w ${changed_file}
-              echo "::set-output name=formatted::true"
             fi
           done
 
       - name: Commit and push changes
-        if: steps.formatting.output.formatted == true
         run: |
           git config --global user.name "jeff-grubb"
           git config --global user.email "jeff.grubb@fox.com"
