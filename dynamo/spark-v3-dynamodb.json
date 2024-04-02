@@ -1,587 +1,587 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "FS DynamoDB Tables V3 - Migration Tables",
-  "Parameters": {
-    "APIName": {
-      "Description": "API name",
-      "Type": "String",
-      "AllowedValues": [
-        "fs"
-      ]
-    },
-    "Environment": {
-      "Description": "Environment for deployment",
-      "Type": "String",
-      "AllowedValues": [
-        "dev",
-        "stage",
-        "prod"
-      ],
-      "Default": "dev"
-    },
-    "CloudformationTemplateSource": {
-      "Description": "The Cloudformation template source in the S3 bucket",
-      "Type": "String"
-    }
-  },
-  "Resources": {
-    "SPARKV3LAYOUTS": {
-      "Type": "AWS::DynamoDB::Table",
-      "DeletionProtectionEnabled": "true",
-      "Properties": {
-        "TableName": {
-          "Fn::Sub": [
-            "${env}-${api}-spark-v3-layouts",
-            {
-              "env": {
-                "Ref": "Environment"
-              },
-              "api": {
-                "Ref": "APIName"
-              }
-            }
-          ]
-        },
-        "KeySchema": [
-          {
-            "KeyType": "HASH",
-            "AttributeName": "spark_id"
-          },
-          {
-            "KeyType": "RANGE",
-            "AttributeName": "post_status"
-          }
-        ],
-        "AttributeDefinitions": [
-          {
-            "AttributeName": "spark_id",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "post_status",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "network",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "type",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "element_id",
-            "AttributeType": "S"
-          }
-        ],
-        "StreamSpecification": {
-          "StreamViewType": "NEW_AND_OLD_IMAGES"
-        },
-        "GlobalSecondaryIndexes": [
-          {
-            "IndexName": "network-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "network"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "spark_id"
-              }
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "FS DynamoDB Tables V3 - Migration Tables",
+    "Parameters": {
+        "APIName": {
+            "Description": "API name",
+            "Type": "String",
+            "AllowedValues": [
+                "fs"
             ]
-          },
-          {
-            "IndexName": "type-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "type"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "spark_id"
-              }
-            ]
-          },
-          {
-            "IndexName": "element_id-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "element_id"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "spark_id"
-              }
-            ]
-          }
-        ],
-        "BillingMode": "PAY_PER_REQUEST",
-        "SSESpecification": {
-          "SSEEnabled": "true",
-          "SSEType": "KMS"
         },
-        "PointInTimeRecoverySpecification": {
-          "PointInTimeRecoveryEnabled": "true"
-        }
-      }
-    },
-    "SPARKV3CONTENT": {
-      "Type": "AWS::DynamoDB::Table",
-      "DeletionProtectionEnabled": "true",
-      "Properties": {
-        "TableName": {
-          "Fn::Sub": [
-            "${env}-${api}-spark-v3-content",
-            {
-              "env": {
-                "Ref": "Environment"
-              },
-              "api": {
-                "Ref": "APIName"
-              }
-            }
-          ]
-        },
-        "AttributeDefinitions": [
-          {
-            "AttributeName": "spark_id",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "post_status",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "network",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "content_type",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "component_type",
-            "AttributeType": "S"
-          }
-        ],
-        "KeySchema": [
-          {
-            "AttributeName": "spark_id",
-            "KeyType": "HASH"
-          },
-          {
-            "AttributeName": "post_status",
-            "KeyType": "RANGE"
-          }
-        ],
-        "GlobalSecondaryIndexes": [
-          {
-            "IndexName": "network-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "network"
-              }
-            ]
-          },
-          {
-            "IndexName": "content_type-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "content_type"
-              }
-            ]
-          },
-          {
-            "IndexName": "component_type-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "component_type"
-              }
-            ]
-          }
-        ],
-        "StreamSpecification": {
-          "StreamViewType": "NEW_AND_OLD_IMAGES"
-        },
-        "BillingMode": "PAY_PER_REQUEST",
-        "SSESpecification": {
-          "SSEEnabled": "true",
-          "SSEType": "KMS"
-        },
-        "PointInTimeRecoverySpecification": {
-          "PointInTimeRecoveryEnabled": "true"
-        }
-      }
-    },
-    "SPARKV3VIDEOS": {
-      "Type": "AWS::DynamoDB::Table",
-      "DeletionProtectionEnabled": "true",
-      "Properties": {
-        "TableName": {
-          "Fn::Sub": [
-            "${env}-${api}-spark-v3-videos",
-            {
-              "env": {
-                "Ref": "Environment"
-              },
-              "api": {
-                "Ref": "APIName"
-              }
-            }
-          ]
-        },
-        "KeySchema": [
-          {
-            "KeyType": "HASH",
-            "AttributeName": "spark_id"
-          },
-          {
-            "KeyType": "RANGE",
-            "AttributeName": "post_status"
-          }
-        ],
-        "AttributeDefinitions": [
-          {
-            "AttributeName": "spark_id",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "post_status",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "content_topic",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "content_type",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "show_code",
-            "AttributeType": "S"
-          }
-        ],
-        "GlobalSecondaryIndexes": [
-          {
-            "IndexName": "content_topic-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "content_topic"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "spark_id"
-              }
-            ]
-          },
-          {
-            "IndexName": "content_type-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "content_type"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "spark_id"
-              }
-            ]
-          },
-          {
-            "IndexName": "show_code-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "show_code"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "spark_id"
-              }
-            ]
-          }
-        ],
-        "StreamSpecification": {
-          "StreamViewType": "NEW_AND_OLD_IMAGES"
-        },
-        "BillingMode": "PAY_PER_REQUEST",
-        "SSESpecification": {
-          "SSEEnabled": "true",
-          "SSEType": "KMS"
-        },
-        "PointInTimeRecoverySpecification": {
-          "PointInTimeRecoveryEnabled": "true"
-        }
-      }
-    },
-    "SPARKV3FOXIPEDIA": {
-      "Type": "AWS::DynamoDB::Table",
-      "DeletionProtectionEnabled": "true",
-      "Properties": {
-        "TableName": {
-          "Fn::Sub": [
-            "${env}-${api}-spark-v3-foxipedia",
-            {
-              "env": {
-                "Ref": "Environment"
-              },
-              "api": {
-                "Ref": "APIName"
-              }
-            }
-          ]
-        },
-        "KeySchema": [
-          {
-            "KeyType": "HASH",
-            "AttributeName": "spark_id"
-          },
-          {
-            "KeyType": "RANGE",
-            "AttributeName": "post_status"
-          }
-        ],
-        "AttributeDefinitions": [
-          {
-            "AttributeName": "spark_id",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "post_status",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "content_type",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "first_release_year",
-            "AttributeType": "N"
-          },
-          {
-            "AttributeName": "show_code",
-            "AttributeType": "S"
-          }
-        ],
-        "GlobalSecondaryIndexes": [
-          {
-            "IndexName": "content_type-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "content_type"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "spark_id"
-              }
-            ]
-          },
-          {
-            "IndexName": "first_release_year-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "first_release_year"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "spark_id"
-              }
-            ]
-          },
-          {
-            "IndexName": "show_code-index",
-            "Projection": {
-              "ProjectionType": "ALL"
-            },
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "spark_id"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "show_code"
-              }
-            ]
-          }
-        ],
-        "StreamSpecification": {
-          "StreamViewType": "NEW_AND_OLD_IMAGES"
-        },
-        "BillingMode": "PAY_PER_REQUEST",
-        "SSESpecification": {
-          "SSEEnabled": "true",
-          "SSEType": "KMS"
-        },
-        "PointInTimeRecoverySpecification": {
-          "PointInTimeRecoveryEnabled": "true"
-        }
-      }
-    },
-    "SPARKV3PROGRAMASSETS": {
-      "Type": "AWS::DynamoDB::Table",
-      "DeletionProtectionEnabled": "true",
-      "Properties": {
-        "TableName": {
-          "Fn::Sub": [
-            "${env}-${api}-spark-v3-program-assets",
-            {
-              "env": {
-                "Ref": "Environment"
-              },
-              "api": {
-                "Ref": "APIName"
-              }
-            }
-          ]
-        },
-        "AttributeDefinitions": [
-          {
-            "AttributeName": "spark_id",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "post_status",
-            "AttributeType": "S"
-          }
-        ],
-        "KeySchema": [
-          {
-            "AttributeName": "spark_id",
-            "KeyType": "HASH"
-          },
-          {
-            "AttributeName": "post_status",
-            "KeyType": "RANGE"
-          }
-        ],
-        "StreamSpecification": {
-          "StreamViewType": "NEW_AND_OLD_IMAGES"
-        },
-        "BillingMode": "PAY_PER_REQUEST",
-        "SSESpecification": {
-          "SSEEnabled": "true",
-          "SSEType": "KMS"
-        },
-        "PointInTimeRecoverySpecification": {
-          "PointInTimeRecoveryEnabled": "true"
-        }
-      }
-    },
-    "SPARKV3BCLARTICLERECORDS": {
-      "Type": "AWS::DynamoDB::Table",
-      "DeletionProtectionEnabled": "true",
-      "Properties": {
-        "TableName": {
-          "Fn::Sub": [
-            "${env}-${api}-spark-v3-bcl-article-records",
-            {
-              "env": {
-                "Ref": "Environment"
-              },
-              "api": {
-                "Ref": "APIName"
-              }
-            }
-          ]
-        },
-        "KeySchema": [
-          {
-            "KeyType": "HASH",
-            "AttributeName": "spark_id"
-          },
-          {
-            "KeyType": "RANGE",
-            "AttributeName": "time_ingested"
-          }
-        ],
-        "AttributeDefinitions": [
-          {
-            "AttributeName": "spark_id",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "time_ingested",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "canonical_url",
-            "AttributeType": "S"
-          }
-        ],
-        "StreamSpecification": {
-          "StreamViewType": "NEW_AND_OLD_IMAGES"
-        },
-        "GlobalSecondaryIndexes": [
-          {
-            "IndexName": "canonical_url-index",
-            "KeySchema": [
-              {
-                "KeyType": "HASH",
-                "AttributeName": "canonical_url"
-              },
-              {
-                "KeyType": "RANGE",
-                "AttributeName": "time_ingested"
-              }
+        "Environment": {
+            "Description": "Environment for deployment",
+            "Type": "String",
+            "AllowedValues": [
+                "dev",
+                "stage",
+                "prod"
             ],
-            "Projection": {
-              "ProjectionType": "ALL"
-            }
-          }
-        ],
-        "BillingMode": "PAY_PER_REQUEST",
-        "SSESpecification": {
-          "SSEEnabled": "true",
-          "SSEType": "KMS"
+            "Default": "dev"
         },
-        "PointInTimeRecoverySpecification": {
-          "PointInTimeRecoveryEnabled": "true"
+        "CloudformationTemplateSource": {
+            "Description": "The Cloudformation template source in the S3 bucket",
+            "Type": "String"
         }
-      }
+    },
+    "Resources": {
+        "SPARKV3LAYOUTS": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-layouts",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                },
+                "KeySchema": [
+                    {
+                        "KeyType": "HASH",
+                        "AttributeName": "spark_id"
+                    },
+                    {
+                        "KeyType": "RANGE",
+                        "AttributeName": "post_status"
+                    }
+                ],
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "spark_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "post_status",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "network",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "type",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "element_id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "StreamSpecification": {
+                    "StreamViewType": "NEW_AND_OLD_IMAGES"
+                },
+                "GlobalSecondaryIndexes": [
+                    {
+                        "IndexName": "network-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "network"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "spark_id"
+                            }
+                        ]
+                    },
+                    {
+                        "IndexName": "type-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "type"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "spark_id"
+                            }
+                        ]
+                    },
+                    {
+                        "IndexName": "element_id-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "element_id"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "spark_id"
+                            }
+                        ]
+                    }
+                ],
+                "BillingMode": "PAY_PER_REQUEST",
+                "SSESpecification": {
+                    "SSEEnabled": "true",
+                    "SSEType": "KMS"
+                },
+                "PointInTimeRecoverySpecification": {
+                    "PointInTimeRecoveryEnabled": "true"
+                }
+            },
+            "DeletionProtectionEnabled": "true"
+        },
+        "SPARKV3CONTENT": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-content",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                },
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "spark_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "post_status",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "network",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "content_type",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "component_type",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "spark_id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "post_status",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "GlobalSecondaryIndexes": [
+                    {
+                        "IndexName": "network-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "network"
+                            }
+                        ]
+                    },
+                    {
+                        "IndexName": "content_type-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "content_type"
+                            }
+                        ]
+                    },
+                    {
+                        "IndexName": "component_type-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "component_type"
+                            }
+                        ]
+                    }
+                ],
+                "StreamSpecification": {
+                    "StreamViewType": "NEW_AND_OLD_IMAGES"
+                },
+                "BillingMode": "PAY_PER_REQUEST",
+                "SSESpecification": {
+                    "SSEEnabled": "true",
+                    "SSEType": "KMS"
+                },
+                "PointInTimeRecoverySpecification": {
+                    "PointInTimeRecoveryEnabled": "true"
+                }
+            },
+            "DeletionProtectionEnabled": "true"
+        },
+        "SPARKV3VIDEOS": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-videos",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                },
+                "KeySchema": [
+                    {
+                        "KeyType": "HASH",
+                        "AttributeName": "spark_id"
+                    },
+                    {
+                        "KeyType": "RANGE",
+                        "AttributeName": "post_status"
+                    }
+                ],
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "spark_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "post_status",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "content_topic",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "content_type",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "show_code",
+                        "AttributeType": "S"
+                    }
+                ],
+                "GlobalSecondaryIndexes": [
+                    {
+                        "IndexName": "content_topic-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "content_topic"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "spark_id"
+                            }
+                        ]
+                    },
+                    {
+                        "IndexName": "content_type-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "content_type"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "spark_id"
+                            }
+                        ]
+                    },
+                    {
+                        "IndexName": "show_code-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "show_code"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "spark_id"
+                            }
+                        ]
+                    }
+                ],
+                "StreamSpecification": {
+                    "StreamViewType": "NEW_AND_OLD_IMAGES"
+                },
+                "BillingMode": "PAY_PER_REQUEST",
+                "SSESpecification": {
+                    "SSEEnabled": "true",
+                    "SSEType": "KMS"
+                },
+                "PointInTimeRecoverySpecification": {
+                    "PointInTimeRecoveryEnabled": "true"
+                }
+            },
+            "DeletionProtectionEnabled": "true"
+        },
+        "SPARKV3FOXIPEDIA": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-foxipedia",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                },
+                "KeySchema": [
+                    {
+                        "KeyType": "HASH",
+                        "AttributeName": "spark_id"
+                    },
+                    {
+                        "KeyType": "RANGE",
+                        "AttributeName": "post_status"
+                    }
+                ],
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "spark_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "post_status",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "content_type",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "first_release_year",
+                        "AttributeType": "N"
+                    },
+                    {
+                        "AttributeName": "show_code",
+                        "AttributeType": "S"
+                    }
+                ],
+                "GlobalSecondaryIndexes": [
+                    {
+                        "IndexName": "content_type-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "content_type"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "spark_id"
+                            }
+                        ]
+                    },
+                    {
+                        "IndexName": "first_release_year-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "first_release_year"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "spark_id"
+                            }
+                        ]
+                    },
+                    {
+                        "IndexName": "show_code-index",
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        },
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "spark_id"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "show_code"
+                            }
+                        ]
+                    }
+                ],
+                "StreamSpecification": {
+                    "StreamViewType": "NEW_AND_OLD_IMAGES"
+                },
+                "BillingMode": "PAY_PER_REQUEST",
+                "SSESpecification": {
+                    "SSEEnabled": "true",
+                    "SSEType": "KMS"
+                },
+                "PointInTimeRecoverySpecification": {
+                    "PointInTimeRecoveryEnabled": "true"
+                }
+            },
+            "DeletionProtectionEnabled": "true"
+        },
+        "SPARKV3PROGRAMASSETS": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-program-assets",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                },
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "spark_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "post_status",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "spark_id",
+                        "KeyType": "HASH"
+                    },
+                    {
+                        "AttributeName": "post_status",
+                        "KeyType": "RANGE"
+                    }
+                ],
+                "StreamSpecification": {
+                    "StreamViewType": "NEW_AND_OLD_IMAGES"
+                },
+                "BillingMode": "PAY_PER_REQUEST",
+                "SSESpecification": {
+                    "SSEEnabled": "true",
+                    "SSEType": "KMS"
+                },
+                "PointInTimeRecoverySpecification": {
+                    "PointInTimeRecoveryEnabled": "true"
+                }
+            },
+            "DeletionProtectionEnabled": "true"
+        },
+        "SPARKV3BCLARTICLERECORDS": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-bcl-article-records",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                },
+                "KeySchema": [
+                    {
+                        "KeyType": "HASH",
+                        "AttributeName": "spark_id"
+                    },
+                    {
+                        "KeyType": "RANGE",
+                        "AttributeName": "time_ingested"
+                    }
+                ],
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "spark_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "time_ingested",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "canonical_url",
+                        "AttributeType": "S"
+                    }
+                ],
+                "StreamSpecification": {
+                    "StreamViewType": "NEW_AND_OLD_IMAGES"
+                },
+                "GlobalSecondaryIndexes": [
+                    {
+                        "IndexName": "canonical_url-index",
+                        "KeySchema": [
+                            {
+                                "KeyType": "HASH",
+                                "AttributeName": "canonical_url"
+                            },
+                            {
+                                "KeyType": "RANGE",
+                                "AttributeName": "time_ingested"
+                            }
+                        ],
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        }
+                    }
+                ],
+                "BillingMode": "PAY_PER_REQUEST",
+                "SSESpecification": {
+                    "SSEEnabled": "true",
+                    "SSEType": "KMS"
+                },
+                "PointInTimeRecoverySpecification": {
+                    "PointInTimeRecoveryEnabled": "true"
+                }
+            },
+            "DeletionProtectionEnabled": "true"
+        }
     }
-  }
 }
