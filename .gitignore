@@ -4,4 +4,6 @@ data
 *.hcl
 .DS_Store
 __pycache__/
-
+temp/
+rain
+rain.zip
