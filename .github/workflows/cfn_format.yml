@@ -39,10 +39,11 @@ jobs:
           done
 
       - name: Commit and push changes
+
         run: |
           git config --global user.name "jeff-grubb"
           git config --global user.email "jeff.grubb@fox.com"
         
           git add -A
           git commit -m "Format files" || true
-          git push
+          git push origin HEAD
