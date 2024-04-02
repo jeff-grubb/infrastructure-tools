@@ -1,12 +1,38 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "FS DynamoDB Tables V3 - Migration Tables",
+    "Description": "Spark V3 DynamoDB Tables",
     "Parameters": {
         "APIName": {
             "Description": "API name",
             "Type": "String",
             "AllowedValues": [
-                "fs"
+                "fs",
+                "fn",
+                "fb",
+                "ok",
+                "fw",
+                "ftn",
+                "fts",
+                "wtxf",
+                "ktvu",
+                "wnyw",
+                "wwor",
+                "kttv",
+                "wfld",
+                "kdfw",
+                "wttg",
+                "kriv",
+                "waga",
+                "wtvt",
+                "ksaz",
+                "wjbk",
+                "kmsp",
+                "wofl",
+                "ktbc",
+                "wogx",
+                "witi",
+                "kcpq",
+                "lnfx"
             ]
         },
         "Environment": {
