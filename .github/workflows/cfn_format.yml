@@ -37,5 +37,5 @@ jobs:
           git config --global user.name "jeff-grubb"
           git config --global user.email "jeff.grubb@fox.com"
         
-          git commit -a -m "Format files"
+          git commit -a -m "Format files" || true
           git push
