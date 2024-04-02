@@ -5,3 +5,4 @@
     "Fn::GetAtt": [
       "SitemapGeneratorV3NewsScheduledRule",
       "Arn"]}}}}
+
