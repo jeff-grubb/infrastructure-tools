@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
     branches: [main]
-    types: [opened, syncronize]
+    types: [opened, synchronize]
 
 jobs:
   format:
@@ -40,7 +40,8 @@ jobs:
         run: |
           git config --global user.name "jeff-grubb"
           git config --global user.email "jeff.grubb@fox.com"
-        
-          git add -A
-          git commit -m "Format files" || true
-          git push
+          if ! git diff --exit-code; then
+            git add -A
+            git commit -m "GH Action Files added $(date)"
+            git push 
+          fi
