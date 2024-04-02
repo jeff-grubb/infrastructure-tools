@@ -1,1 +1,6 @@
-{"NewsRuleEventPermissionsToInvokeSitemapLambda": { "Type": "AWS::Lambda::Permission", "DependsOn": "SitemapGeneratorV3Function"}}
+{
+    "NewsRuleEventPermissionsToInvokeSitemapLambda": {
+        "Type": "AWS::Lambda::Permission",
+        "DependsOn": "SitemapGeneratorV3Function"
+    }
+}
