@@ -54,6 +54,7 @@
         "SPARKV3LAYOUTS": {
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
+                "DeletionProtectionEnabled": "true",
                 "TableName": {
                     "Fn::Sub": [
                         "${env}-${api}-spark-v3-layouts",
@@ -160,12 +161,12 @@
                 "PointInTimeRecoverySpecification": {
                     "PointInTimeRecoveryEnabled": "true"
                 }
-            },
-            "DeletionProtectionEnabled": "true"
+            }
         },
         "SPARKV3CONTENT": {
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
+                "DeletionProtectionEnabled": "true",
                 "TableName": {
                     "Fn::Sub": [
                         "${env}-${api}-spark-v3-content",
@@ -260,12 +261,12 @@
                 "PointInTimeRecoverySpecification": {
                     "PointInTimeRecoveryEnabled": "true"
                 }
-            },
-            "DeletionProtectionEnabled": "true"
+            }
         },
         "SPARKV3VIDEOS": {
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
+                "DeletionProtectionEnabled": "true",
                 "TableName": {
                     "Fn::Sub": [
                         "${env}-${api}-spark-v3-videos",
@@ -372,12 +373,12 @@
                 "PointInTimeRecoverySpecification": {
                     "PointInTimeRecoveryEnabled": "true"
                 }
-            },
-            "DeletionProtectionEnabled": "true"
+            }
         },
         "SPARKV3FOXIPEDIA": {
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
+                "DeletionProtectionEnabled": "true",
                 "TableName": {
                     "Fn::Sub": [
                         "${env}-${api}-spark-v3-foxipedia",
@@ -484,12 +485,12 @@
                 "PointInTimeRecoverySpecification": {
                     "PointInTimeRecoveryEnabled": "true"
                 }
-            },
-            "DeletionProtectionEnabled": "true"
+            }
         },
         "SPARKV3PROGRAMASSETS": {
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
+                "DeletionProtectionEnabled": "true",
                 "TableName": {
                     "Fn::Sub": [
                         "${env}-${api}-spark-v3-program-assets",
@@ -534,12 +535,12 @@
                 "PointInTimeRecoverySpecification": {
                     "PointInTimeRecoveryEnabled": "true"
                 }
-            },
-            "DeletionProtectionEnabled": "true"
+            }
         },
         "SPARKV3BCLARTICLERECORDS": {
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
+                "DeletionProtectionEnabled": "true",
                 "TableName": {
                     "Fn::Sub": [
                         "${env}-${api}-spark-v3-bcl-article-records",
@@ -606,8 +607,161 @@
                 "PointInTimeRecoverySpecification": {
                     "PointInTimeRecoveryEnabled": "true"
                 }
+            }
+        }
+    },
+    "Outputs": {
+        "SPARKV3LAYOUTSSTREAMARN": {
+            "Description": "Spark v3 Layouts DynamoDB Table Stream Arn",
+            "Value": {
+                "Fn::GetAtt": [
+                    "SPARKV3LAYOUTS",
+                    "StreamArn"
+                ]
             },
-            "DeletionProtectionEnabled": "true"
+            "Export": {
+                "Name": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-layouts-stream-arn",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "SPARKV3CONTENTSTREAMARN": {
+            "Description": " Spark v3 Content DynamoDB Table Stream Arn",
+            "Value": {
+                "Fn::GetAtt": [
+                    "SPARKV3CONTENT",
+                    "StreamArn"
+                ]
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-content-stream-arn",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "SPARKV3BCLARTICLERECORDSARN": {
+            "Description": " Spark V3 BCL Articles DynamoDB Table Stream Arn",
+            "Value": {
+                "Fn::GetAtt": [
+                    "SPARKV3BCLARTICLERECORDS",
+                    "StreamArn"
+                ]
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-bcl-article-records-stream-arn",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "SPARKV3PROGRAMASSETSARN": {
+            "Description": " Spark V3 Program Assets DynamoDB Table Stream Arn",
+            "Value": {
+                "Fn::GetAtt": [
+                    "SPARKV3PROGRAMASSETS",
+                    "StreamArn"
+                ]
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Sub": [
+                        "${env}-${api}-spark-v3-program-assets-stream-arn",
+                        {
+                            "env": {
+                                "Ref": "Environment"
+                            },
+                            "api": {
+                                "Ref": "APIName"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "SPARKV3FOXIPEDIAARN": {
+            "Description": " Spark v3 Foxipedia DynamoDB Table Stream Arn",
+            "Value": {
+                "Fn::GetAtt": [
+                    "SPARKV3FOXIPEDIA",
+                    "StreamArn"
+                ]
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            {
+                                "Ref": "Environment"
+                            },
+                            {
+                                "Ref": "APIName"
+                            },
+                            "spark",
+                            "v3",
+                            "foxipedia",
+                            "arn"
+                        ]
+                    ]
+                }
+            }
+        },
+        "SPARKV3VIDEOSARN": {
+            "Description": " Spark v3 Videos DynamoDB Table Stream Arn",
+            "Value": {
+                "Fn::GetAtt": [
+                    "SPARKV3VIDEOS",
+                    "StreamArn"
+                ]
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            {
+                                "Ref": "Environment"
+                            },
+                            {
+                                "Ref": "APIName"
+                            },
+                            "spark",
+                            "v3",
+                            "videos",
+                            "arn"
+                        ]
+                    ]
+                }
+            }
         }
     }
 }
