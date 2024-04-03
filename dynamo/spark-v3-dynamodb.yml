@@ -1,0 +1,404 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Spark V3 DynamoDB Tables
+
+Parameters:
+  APIName:
+    Description: API name
+    Type: String
+    AllowedValues:
+      - fs
+      - fn
+      - fb
+      - ok
+      - fw
+      - ftn
+      - fts
+      - wtxf
+      - ktvu
+      - wnyw
+      - wwor
+      - kttv
+      - wfld
+      - kdfw
+      - wttg
+      - kriv
+      - waga
+      - wtvt
+      - ksaz
+      - wjbk
+      - kmsp
+      - wofl
+      - ktbc
+      - wogx
+      - witi
+      - kcpq
+      - lnfx
+
+  Environment:
+    Description: Environment for deployment
+    Type: String
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+    Default: dev
+
+  CloudformationTemplateSource:
+    Description: The Cloudformation template source in the S3 bucket
+    Type: String
+
+Resources:
+  SPARKV3LAYOUTS:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      DeletionProtectionEnabled: "true"
+      TableName: !Sub
+        - ${env}-${api}-spark-v3-layouts
+        - env: !Ref Environment
+          api: !Ref APIName
+      KeySchema:
+        - KeyType: HASH
+          AttributeName: spark_id
+        - KeyType: RANGE
+          AttributeName: post_status
+      AttributeDefinitions:
+        - AttributeName: spark_id
+          AttributeType: S
+        - AttributeName: post_status
+          AttributeType: S
+        - AttributeName: network
+          AttributeType: S
+        - AttributeName: type
+          AttributeType: S
+        - AttributeName: element_id
+          AttributeType: S
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      GlobalSecondaryIndexes:
+        - IndexName: network-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: network
+            - KeyType: RANGE
+              AttributeName: spark_id
+        - IndexName: type-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: type
+            - KeyType: RANGE
+              AttributeName: spark_id
+        - IndexName: element_id-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: element_id
+            - KeyType: RANGE
+              AttributeName: spark_id
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: "true"
+        SSEType: KMS
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: "true"
+
+  SPARKV3CONTENT:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      DeletionProtectionEnabled: "true"
+      TableName: !Sub
+        - ${env}-${api}-spark-v3-content
+        - env: !Ref Environment
+          api: !Ref APIName
+      AttributeDefinitions:
+        - AttributeName: spark_id
+          AttributeType: S
+        - AttributeName: post_status
+          AttributeType: S
+        - AttributeName: network
+          AttributeType: S
+        - AttributeName: content_type
+          AttributeType: S
+        - AttributeName: component_type
+          AttributeType: S
+      KeySchema:
+        - AttributeName: spark_id
+          KeyType: HASH
+        - AttributeName: post_status
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: network-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: network
+        - IndexName: content_type-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: content_type
+        - IndexName: component_type-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: component_type
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: "true"
+        SSEType: KMS
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: "true"
+
+  SPARKV3VIDEOS:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      DeletionProtectionEnabled: "true"
+      TableName: !Sub
+        - ${env}-${api}-spark-v3-videos
+        - env: !Ref Environment
+          api: !Ref APIName
+      KeySchema:
+        - KeyType: HASH
+          AttributeName: spark_id
+        - KeyType: RANGE
+          AttributeName: post_status
+      AttributeDefinitions:
+        - AttributeName: spark_id
+          AttributeType: S
+        - AttributeName: post_status
+          AttributeType: S
+        - AttributeName: content_topic
+          AttributeType: S
+        - AttributeName: content_type
+          AttributeType: S
+        - AttributeName: show_code
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: content_topic-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: content_topic
+            - KeyType: RANGE
+              AttributeName: spark_id
+        - IndexName: content_type-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: content_type
+            - KeyType: RANGE
+              AttributeName: spark_id
+        - IndexName: show_code-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: show_code
+            - KeyType: RANGE
+              AttributeName: spark_id
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: "true"
+        SSEType: KMS
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: "true"
+
+  SPARKV3FOXIPEDIA:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      DeletionProtectionEnabled: "true"
+      TableName: !Sub
+        - ${env}-${api}-spark-v3-foxipedia
+        - env: !Ref Environment
+          api: !Ref APIName
+      KeySchema:
+        - KeyType: HASH
+          AttributeName: spark_id
+        - KeyType: RANGE
+          AttributeName: post_status
+      AttributeDefinitions:
+        - AttributeName: spark_id
+          AttributeType: S
+        - AttributeName: post_status
+          AttributeType: S
+        - AttributeName: content_type
+          AttributeType: S
+        - AttributeName: first_release_year
+          AttributeType: N
+        - AttributeName: show_code
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: content_type-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: content_type
+            - KeyType: RANGE
+              AttributeName: spark_id
+        - IndexName: first_release_year-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: first_release_year
+            - KeyType: RANGE
+              AttributeName: spark_id
+        - IndexName: show_code-index
+          Projection:
+            ProjectionType: ALL
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: spark_id
+            - KeyType: RANGE
+              AttributeName: show_code
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: "true"
+        SSEType: KMS
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: "true"
+
+  SPARKV3PROGRAMASSETS:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      DeletionProtectionEnabled: "true"
+      TableName: !Sub
+        - ${env}-${api}-spark-v3-program-assets
+        - env: !Ref Environment
+          api: !Ref APIName
+      AttributeDefinitions:
+        - AttributeName: spark_id
+          AttributeType: S
+        - AttributeName: post_status
+          AttributeType: S
+      KeySchema:
+        - AttributeName: spark_id
+          KeyType: HASH
+        - AttributeName: post_status
+          KeyType: RANGE
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: "true"
+        SSEType: KMS
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: "true"
+
+  SPARKV3BCLARTICLERECORDS:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      DeletionProtectionEnabled: "true"
+      TableName: !Sub
+        - ${env}-${api}-spark-v3-bcl-article-records
+        - env: !Ref Environment
+          api: !Ref APIName
+      KeySchema:
+        - KeyType: HASH
+          AttributeName: spark_id
+        - KeyType: RANGE
+          AttributeName: time_ingested
+      AttributeDefinitions:
+        - AttributeName: spark_id
+          AttributeType: S
+        - AttributeName: time_ingested
+          AttributeType: S
+        - AttributeName: canonical_url
+          AttributeType: S
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      GlobalSecondaryIndexes:
+        - IndexName: canonical_url-index
+          KeySchema:
+            - KeyType: HASH
+              AttributeName: canonical_url
+            - KeyType: RANGE
+              AttributeName: time_ingested
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: "true"
+        SSEType: KMS
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: "true"
+
+Outputs:
+  SPARKV3LAYOUTSSTREAMARN:
+    Description: Spark v3 Layouts DynamoDB Table Stream Arn
+    Value: !GetAtt SPARKV3LAYOUTS.StreamArn
+    Export:
+      Name: !Sub
+        - ${env}-${api}-spark-v3-layouts-stream-arn
+        - env: !Ref Environment
+          api: !Ref APIName
+
+  SPARKV3CONTENTSTREAMARN:
+    Description: ' Spark v3 Content DynamoDB Table Stream Arn'
+    Value: !GetAtt SPARKV3CONTENT.StreamArn
+    Export:
+      Name: !Sub
+        - ${env}-${api}-spark-v3-content-stream-arn
+        - env: !Ref Environment
+          api: !Ref APIName
+
+  SPARKV3BCLARTICLERECORDSARN:
+    Description: ' Spark V3 BCL Articles DynamoDB Table Stream Arn'
+    Value: !GetAtt SPARKV3BCLARTICLERECORDS.StreamArn
+    Export:
+      Name: !Sub
+        - ${env}-${api}-spark-v3-bcl-article-records-stream-arn
+        - env: !Ref Environment
+          api: !Ref APIName
+
+  SPARKV3PROGRAMASSETSARN:
+    Description: ' Spark V3 Program Assets DynamoDB Table Stream Arn'
+    Value: !GetAtt SPARKV3PROGRAMASSETS.StreamArn
+    Export:
+      Name: !Sub
+        - ${env}-${api}-spark-v3-program-assets-stream-arn
+        - env: !Ref Environment
+          api: !Ref APIName
+
+  SPARKV3FOXIPEDIAARN:
+    Description: ' Spark v3 Foxipedia DynamoDB Table Stream Arn'
+    Value: !GetAtt SPARKV3FOXIPEDIA.StreamArn
+    Export:
+      Name: !Join
+        - '-'
+        - - !Ref Environment
+          - !Ref APIName
+          - spark
+          - v3
+          - foxipedia
+          - arn
+
+  SPARKV3VIDEOSARN:
+    Description: ' Spark v3 Videos DynamoDB Table Stream Arn'
+    Value: !GetAtt SPARKV3VIDEOS.StreamArn
+    Export:
+      Name: !Join
+        - '-'
+        - - !Ref Environment
+          - !Ref APIName
+          - spark
+          - v3
+          - videos
+          - arn
